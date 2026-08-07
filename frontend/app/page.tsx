@@ -100,8 +100,8 @@ export default function Home() {
 
           {answer.sources.length > 0 ? (
             <ul className="mt-2 list-disc pl-5">
-              {answer.sources.map((source) => (
-                <li key={source}>{source}</li>
+              {answer.sources.map((source, index) => (
+                <li key={`${source}-${index}`}>{source}</li>
               ))}
             </ul>
           ) : (
