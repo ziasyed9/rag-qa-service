@@ -5,12 +5,23 @@ from app.services.chunking import chunk_text
 DATA_DIR = "data"
 
 
+def get_already_ingested_sources(cur) -> set[str]:
+    cur.execute("SELECT DISTINCT source FROM chunks;")
+    return {row[0] for row in cur.fetchall()}
+
+
 def ingest_documents():
     conn = get_connection()
     cur = conn.cursor()
 
+    already_ingested = get_already_ingested_sources(cur)
+
     for filename in os.listdir(DATA_DIR):
         if not filename.endswith(".txt"):
+            continue
+
+        if filename in already_ingested:
+            print(f"Skipping {filename}, already ingested.")
             continue
 
         filepath = os.path.join(DATA_DIR, filename)
