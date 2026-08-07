@@ -3,4 +3,5 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
-data/task-definition.json
+data/
+task-definition.json

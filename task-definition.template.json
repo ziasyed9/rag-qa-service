@@ -1,0 +1,49 @@
+{
+  "family": "rag-qa-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "3072",
+  "executionRoleArn": "arn:aws:iam::006321332405:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::006321332405:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "db",
+      "image": "pgvector/pgvector:pg16",
+      "essential": true,
+      "environment": [
+        { "name": "POSTGRES_USER", "value": "raguser" },
+        { "name": "POSTGRES_PASSWORD", "value": "PASTE_DB_PASSWORD_HERE" },
+        { "name": "POSTGRES_DB", "value": "ragdb" }
+      ],
+      "portMappings": [{ "containerPort": 5432 }],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/rag-qa-service",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "db"
+        }
+      }
+    },
+    {
+      "name": "app",
+      "image": "006321332405.dkr.ecr.us-west-2.amazonaws.com/rag-qa-service:latest",
+      "essential": true,
+      "dependsOn": [{ "containerName": "db", "condition": "START" }],
+      "environment": [
+        { "name": "DATABASE_URL", "value": "postgresql://raguser:PASTE_DB_PASSWORD_HERE@localhost:5432/ragdb" },
+        { "name": "GROQ_API_KEY", "value": "PASTE_YOUR_GROQ_KEY_HERE" }
+      ],
+      "portMappings": [{ "containerPort": 8000 }],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/rag-qa-service",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "app"
+        }
+      }
+    }
+  ]
+}
