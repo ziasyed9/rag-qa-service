@@ -42,7 +42,7 @@ User question (via Next.js frontend)
 |---|---|
 | Frontend | Next.js, React, TypeScript, Tailwind CSS |
 | API | Python 3.11, FastAPI, Pydantic |
-| Retrieval | sentence-transformers, PostgreSQL + pgvector |
+| Retrieval | sentence-transformers, PostgreSQL + pgvector (HNSW indexed) |
 | Generation | Groq API (Llama 3.1 8B) |
 | Infrastructure | Docker, Docker Compose |
 | CI/CD | GitHub Actions |
@@ -69,6 +69,8 @@ curl -X POST http://localhost:8000/ask \
 **Retrieval is explicit, not a black box.** Similarity search runs directly against pgvector using SQL, `ORDER BY embedding <-> query_vector`, so the ranking logic is fully inspectable rather than hidden behind a library abstraction.
 
 **Multi-document retrieval, verified.** With four distinct job postings loaded, questions correctly retrieve and cite different source documents depending on content, confirming the retrieval step is actually discriminating on meaning rather than just returning whatever's in the database.
+
+**Indexed for scale, not just correctness.** Retrieval initially ran as a brute-force scan comparing the query vector against every row in the table, fine at the current document count, but a real bottleneck as the dataset grows. Added an HNSW index (`CREATE INDEX ... USING hnsw`) on the embedding column so PostgreSQL can find nearest neighbors without scanning the full table, the same kind of approximate nearest-neighbor structure production vector search systems rely on.
 
 **Real production issues surfaced and fixed during the build.** A NumPy 2.x/torch version conflict broke embedding generation. An httpx version mismatch broke the Groq client. The ECS task was killed by an out-of-memory error from underprovisioned memory, diagnosed and fixed by resizing from 1GB to 3GB. A missing IAM task role silently blocked remote container access until identified.
 
