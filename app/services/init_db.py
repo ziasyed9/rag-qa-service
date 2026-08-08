@@ -16,6 +16,11 @@ def init_db():
         );
     """)
 
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS chunks_embedding_idx
+        ON chunks USING hnsw (embedding vector_l2_ops);
+    """)
+
     conn.commit()
     cur.close()
     conn.close()
